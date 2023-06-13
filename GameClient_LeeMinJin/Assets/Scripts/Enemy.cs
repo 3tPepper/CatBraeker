@@ -12,10 +12,12 @@ public class Enemy
 
     public GameObject enemy;
     public int hp;
+    public int max_hp;
 
     public Enemy(GameObject enemy, string name)
     {
         this.enemy = enemy;
         hp = enemy_dic[name];
+        max_hp = hp;
     }
 }

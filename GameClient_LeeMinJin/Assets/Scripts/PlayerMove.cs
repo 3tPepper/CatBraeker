@@ -8,10 +8,13 @@ public class PlayerMove : MonoBehaviour
 {
     Rigidbody2D rb;
 
+    //---player status---//
     public static int hp = 3;
-    public static string player_status = "none";
+    const int atk = 1000;
     const float jump_power = 400.0f;  //player jump speed
     Boolean is_ground = true;
+    public static string player_status = "none";
+
 
     private void Start()
     {
@@ -26,6 +29,10 @@ public class PlayerMove : MonoBehaviour
         {
             is_ground = true;
         }
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
         if (collision.gameObject.tag == "Enemy")
         {
             //플레이어 상태 체크
@@ -36,7 +43,8 @@ public class PlayerMove : MonoBehaviour
             }
             else if (player_status.Equals("attack"))    //공격 상태
             {
-                //해당 enemy 객체 비활성화
+                //해당 enemy 객체 체력 감소
+                GameManager.instance.EnemyAttack(atk);
             }
             else
             {
@@ -97,9 +105,19 @@ public class PlayerMove : MonoBehaviour
         if (player_status.Equals("none"))
         {
             Debug.Log("press attack btn");
-            player_status = "attack";
-            //animation play
+            StartCoroutine(Attack());
         }
+    }
+
+    IEnumerator Attack()
+    {
+        Debug.Log("start attack");
+        player_status = "attack";
+        //animation play
+        yield return new WaitForSeconds(0.2f);
+        Debug.Log(player_status);
+        player_status = "none";
+        Debug.Log("end attack");
     }
 
 
