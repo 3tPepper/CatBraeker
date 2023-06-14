@@ -4,15 +4,16 @@ using UnityEngine;
 
 public class WeaponScript : MonoBehaviour
 {
-    const int atk = 1000;
-    private void OnTriggerStay2D(Collider2D collision)
+    private void OnCollisionStay2D(Collision2D collision)
     {
-        if (PlayerMove.player_status.Equals("attack"))    //공격 상태
+        if (PlayerMove.player_status.Equals("attack") && collision.gameObject.tag == "Enemy")    //공격 상태
         {
             GetComponentInParent<PlayerMove>().StopCoroutine(PlayerMove.coroutine);
-            //해당 enemy 객체 체력 감소
-            GameManager.instance.EnemyAttack(atk);
+            PlayerMove.animator.SetBool("Is Attack", false);
             PlayerMove.player_status = "none";
+            //해당 enemy 객체 체력 감소
+            GameManager.instance.EnemyAttack();
+            
         }
     }
 }

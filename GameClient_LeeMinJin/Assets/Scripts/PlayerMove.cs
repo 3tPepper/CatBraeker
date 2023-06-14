@@ -8,6 +8,7 @@ public class PlayerMove : MonoBehaviour
 {
     Rigidbody2D rb;
 
+
     //---player status---//
     public static int hp = 3;
     const float jump_power = 400.0f;  //player jump speed
@@ -15,10 +16,12 @@ public class PlayerMove : MonoBehaviour
     public static string player_status = "none";
 
     public static Coroutine coroutine;
+    public static Animator animator;
 
     private void Start()
     {
-        rb = this.GetComponent<Rigidbody2D>();
+        rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
         player_status = "none";
     }
 
@@ -61,10 +64,9 @@ public class PlayerMove : MonoBehaviour
         //if 땅과 접한 상태일 경우 실행
         if (is_ground)
         {
-            Debug.Log("press jump btn");
+            Sound.instance.JumpSound();
 
             rb.AddForce(Vector2.up * jump_power);
-
             is_ground = false;
         }
 
@@ -74,9 +76,10 @@ public class PlayerMove : MonoBehaviour
     //defence 버튼 누르고 있는 동안 -> defence 상태
     public void PointerDownDefBtn()
     {
-        if(!player_status.Equals("game over"))
+        if (!player_status.Equals("game over"))
         {
-            Debug.Log("press defence btn");
+            Sound.instance.DefSound();
+            animator.SetBool("Is Defence", true);
             player_status = "defence";
         }
 
@@ -85,9 +88,9 @@ public class PlayerMove : MonoBehaviour
 
     public void PointerUpDefBtn()
     {
+        animator.SetBool("Is Defence", false);
         if (!player_status.Equals("game over"))
         {
-            Debug.Log("no press defence btn");
             player_status = "none";
         }
     }
@@ -98,19 +101,22 @@ public class PlayerMove : MonoBehaviour
         //if player_status == "none" 일 경우 실행
         if (player_status.Equals("none"))
         {
-            Debug.Log("press attack btn");
+            Sound.instance.AtkSound();
+            Effects.instance.AtkFX(gameObject);
+            animator.SetBool("Is Attack", true);
             coroutine = StartCoroutine(Attack());
         }
     }
 
     IEnumerator Attack()
     {
-        Debug.Log("start attack");
         player_status = "attack";
-        //animation play
-        yield return new WaitForSeconds(0.2f);
-        player_status = "none";
-        Debug.Log("end attack");
+        yield return new WaitForSeconds(0.3f);
+        animator.SetBool("Is Attack", false);
+        if (player_status.Equals("attack"))
+        {
+            player_status = "none";
+        }
     }
 
 

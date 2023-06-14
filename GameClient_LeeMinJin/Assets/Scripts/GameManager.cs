@@ -39,12 +39,17 @@ public class GameManager : MonoBehaviour
     Slider wave_slider;
     [SerializeField]
     Text combo_txt;
+    public Image atk_gage_img;
+
+    public static float atk_gage = 0.0f;
 
     //Wave total
     const int wave_tot = 4;
     int all_enemy_cnt;
-    const float enemy_height = 1.7f;
+    const float enemy_height = 1.6f;
     const float enemy_up_power = 600.0f;
+    const int atk = 1000;
+    const float gage_per = 0.1f;
 
     //now wave
     int now_wave = 1;
@@ -72,33 +77,13 @@ public class GameManager : MonoBehaviour
         {
             all_enemy_cnt += (i * 5) + 5;
         }
-
-        GameObject[] enemies_prefab = Resources.LoadAll<GameObject>("Prefabs/Enemies/");
-        int enemyP_len = enemies_prefab.Length;
-        
-        // 적 객체 오브젝트 풀링
-        for(int i=0; i<enemies.Length; i++)
-        {
-            int num = Random.Range(0, enemyP_len);
-            string enemyP_name = enemies_prefab[num].name;
-            enemies[i] = new Enemy(Instantiate(enemies_prefab[num]), enemyP_name);
-            //enemy_folder의 하위로 이동
-            enemies[i].enemy.transform.parent = enemy_folder.transform;
-            //비활성화
-            enemies[i].enemy.SetActive(false);
-        }
-
-        //ui 초기화
-        wave_slider.maxValue = all_enemy_cnt;
-        PlayerHPUI(PlayerMove.hp);
-        EnemyHPUI();
     }
 
     void Wave(int wave_num)
     {
         WaveUI();
 
-        enemy_folder.transform.position = new Vector2(0, 10);
+        enemy_folder.transform.position = new Vector2(0, 15);
 
         //해당 wave에서 등장할 적 객체 수
         int enemy_len = wave_num * 5 + 5;
@@ -127,14 +112,20 @@ public class GameManager : MonoBehaviour
 
 
     //공격하면, enemy의 체력이 감소한다.
-    public void EnemyAttack(int atk)
+    public void EnemyAttack()
     {
-        combo_num++;
-        ComboUI();
+        AtkSkillUI(gage_per);
+        
+        ComboUI(1);
+
         enemies[front_enemy].hp -= atk;
         if(enemies[front_enemy].hp <= 0) {
+            //sound
+            Sound.instance.EnemySound();
+
             //score 증가: 쓰러트린 적의 최대 체력만큼 점수 획득
             ScoreUI(enemies[front_enemy].max_hp);
+
             //init pool
             enemies[front_enemy].enemy.SetActive(false);
             enemies[front_enemy].hp = enemies[front_enemy].max_hp;
@@ -170,11 +161,13 @@ public class GameManager : MonoBehaviour
 
     void GameClear()
     {
+
     }
 
     public void GameOver()
     {
-        Debug.Log("GameOver");
+        game_over_panel.SetActive(true);
+
         //stop enemy
         enemy_folder.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
         //stop player
@@ -187,15 +180,38 @@ public class GameManager : MonoBehaviour
         game_start_panel.SetActive(false);
         game_over_panel.SetActive(false);
         //init
+        enemy_folder.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Dynamic;
         now_wave = 1;
         now_score = 0;
         now_enemies = 0;
         front_enemy = 0;
         solve_enemy = 0;
         combo_num = 0;
+        atk_gage = 0f;
 
         PlayerMove.hp = 3;
         PlayerMove.player_status = "none";
+
+        GameObject[] enemies_prefab = Resources.LoadAll<GameObject>("Prefabs/Enemies/");
+        int enemyP_len = enemies_prefab.Length;
+
+        // 적 객체 오브젝트 풀링
+        for (int i = 0; i < enemies.Length; i++)
+        {
+            int num = Random.Range(0, enemyP_len);
+            string enemyP_name = enemies_prefab[num].name;
+            enemies[i] = new Enemy(Instantiate(enemies_prefab[num], enemy_folder.transform), enemyP_name);
+            //비활성화
+            enemies[i].enemy.SetActive(false);
+        }
+
+
+        //ui 초기화
+        wave_slider.maxValue = all_enemy_cnt;
+        PlayerHPUI(PlayerMove.hp);
+        EnemyHPUI();
+        ScoreUI(0);
+        AtkSkillUI(0f);
 
         Wave(now_wave);
     }
@@ -233,9 +249,28 @@ public class GameManager : MonoBehaviour
         wave_slider.value = solve_enemy;
     }
 
-    void ComboUI()
+    void ComboUI(int num)
     {
+        combo_num += num;
         combo_txt.text = combo_num + " COMBO";
         combo_animator.SetTrigger("Combo");
+    }
+
+    public void AtkSkillUI(float per)
+    {
+        if (atk_gage < 1)
+        {
+            atk_gage += per;
+            atk_gage_img.fillAmount = atk_gage;
+        }
+        else
+        {
+            Skills.is_atk_ready = true;
+        }
+    }
+
+    public void ExitBtn()
+    {
+        Application.Quit();
     }
 }
