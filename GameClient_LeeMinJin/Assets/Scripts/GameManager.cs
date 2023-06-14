@@ -170,6 +170,10 @@ public class GameManager : MonoBehaviour
 
         //stop enemy
         enemy_folder.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
+        for(int i=0; i<enemies.Length; i++)
+        {
+            Destroy(enemies[i].enemy);
+        }
         //stop player
         PlayerMove.player_status = "game over";
     }
@@ -194,7 +198,7 @@ public class GameManager : MonoBehaviour
 
         GameObject[] enemies_prefab = Resources.LoadAll<GameObject>("Prefabs/Enemies/");
         int enemyP_len = enemies_prefab.Length;
-
+        
         // 적 객체 오브젝트 풀링
         for (int i = 0; i < enemies.Length; i++)
         {
