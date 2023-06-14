@@ -17,7 +17,11 @@ public class GameManager : MonoBehaviour
             return _instance;
         }
     }
-    
+
+    [SerializeField]
+    GameObject game_start_panel;
+    [SerializeField]
+    GameObject game_over_panel;
     [SerializeField]
     GameObject enemy_folder;
 
@@ -33,6 +37,8 @@ public class GameManager : MonoBehaviour
     Text wave_txt;
     [SerializeField]
     Slider wave_slider;
+    [SerializeField]
+    Text combo_txt;
 
     //Wave total
     const int wave_tot = 4;
@@ -46,8 +52,11 @@ public class GameManager : MonoBehaviour
     int now_enemies = 0;    
     int front_enemy = 0;    //가장 선두에 있는 적 객체 인덱스
     int solve_enemy = 0;    //해치운 적의 수
+    public static int combo_num = 0;
     int now_score = 0;
 
+    //animator
+    Animator combo_animator;
 
     //enemies object pooling
     Enemy[] enemies = new Enemy[wave_tot * 5 + 5]; //wave당 적 객체 수: 10, 15, 20, 25...최대 8*5+5
@@ -55,10 +64,15 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        game_start_panel.SetActive(true);
+        game_over_panel.SetActive(false);
+        combo_animator = combo_txt.GetComponent<Animator>();
+
         for(int i=1; i<=wave_tot; i++)
         {
             all_enemy_cnt += (i * 5) + 5;
         }
+
         GameObject[] enemies_prefab = Resources.LoadAll<GameObject>("Prefabs/Enemies/");
         int enemyP_len = enemies_prefab.Length;
         
@@ -76,7 +90,6 @@ public class GameManager : MonoBehaviour
 
         //ui 초기화
         wave_slider.maxValue = all_enemy_cnt;
-        Wave(now_wave);
         PlayerHPUI(PlayerMove.hp);
         EnemyHPUI();
     }
@@ -116,6 +129,8 @@ public class GameManager : MonoBehaviour
     //공격하면, enemy의 체력이 감소한다.
     public void EnemyAttack(int atk)
     {
+        combo_num++;
+        ComboUI();
         enemies[front_enemy].hp -= atk;
         if(enemies[front_enemy].hp <= 0) {
             //score 증가: 쓰러트린 적의 최대 체력만큼 점수 획득
@@ -169,6 +184,19 @@ public class GameManager : MonoBehaviour
     //---------------UI------------------//
     public void GameStartBtn()
     {
+        game_start_panel.SetActive(false);
+        game_over_panel.SetActive(false);
+        //init
+        now_wave = 1;
+        now_score = 0;
+        now_enemies = 0;
+        front_enemy = 0;
+        solve_enemy = 0;
+        combo_num = 0;
+
+        PlayerMove.hp = 3;
+        PlayerMove.player_status = "none";
+
         Wave(now_wave);
     }
 
@@ -203,5 +231,11 @@ public class GameManager : MonoBehaviour
     {
         wave_txt.text = now_wave.ToString();
         wave_slider.value = solve_enemy;
+    }
+
+    void ComboUI()
+    {
+        combo_txt.text = combo_num + " COMBO";
+        combo_animator.SetTrigger("Combo");
     }
 }

@@ -36,12 +36,14 @@ public class PlayerMove : MonoBehaviour
             {
                 //enemy folder 위로 상승
                 GameManager.instance.EnemyUp();
+                GameManager.combo_num = 0;
             }
             else
             {
                 GameManager.instance.EnemyUp();
                 //플레이어 hp감소
                 hp--;
+                GameManager.combo_num = 0;
                 GameManager.instance.PlayerHPUI(hp);
                 if (hp <= 0)
                 {
