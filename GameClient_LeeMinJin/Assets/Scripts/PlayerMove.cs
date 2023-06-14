@@ -10,11 +10,11 @@ public class PlayerMove : MonoBehaviour
 
     //---player status---//
     public static int hp = 3;
-    const int atk = 1000;
     const float jump_power = 400.0f;  //player jump speed
     Boolean is_ground = true;
     public static string player_status = "none";
 
+    public static Coroutine coroutine;
 
     private void Start()
     {
@@ -29,10 +29,6 @@ public class PlayerMove : MonoBehaviour
         {
             is_ground = true;
         }
-    }
-
-    private void OnCollisionStay2D(Collision2D collision)
-    {
         if (collision.gameObject.tag == "Enemy")
         {
             //플레이어 상태 체크
@@ -40,11 +36,6 @@ public class PlayerMove : MonoBehaviour
             {
                 //enemy folder 위로 상승
                 GameManager.instance.EnemyUp();
-            }
-            else if (player_status.Equals("attack"))    //공격 상태
-            {
-                //해당 enemy 객체 체력 감소
-                GameManager.instance.EnemyAttack(atk);
             }
             else
             {
@@ -59,6 +50,7 @@ public class PlayerMove : MonoBehaviour
             }
         }
     }
+
 
 
     //------------Button-----------//
@@ -105,7 +97,7 @@ public class PlayerMove : MonoBehaviour
         if (player_status.Equals("none"))
         {
             Debug.Log("press attack btn");
-            StartCoroutine(Attack());
+            coroutine = StartCoroutine(Attack());
         }
     }
 
@@ -115,7 +107,6 @@ public class PlayerMove : MonoBehaviour
         player_status = "attack";
         //animation play
         yield return new WaitForSeconds(0.2f);
-        Debug.Log(player_status);
         player_status = "none";
         Debug.Log("end attack");
     }

@@ -29,25 +29,36 @@ public class GameManager : MonoBehaviour
     Text enemy_hp_txt;
     [SerializeField]
     Text score_txt;
+    [SerializeField]
+    Text wave_txt;
+    [SerializeField]
+    Slider wave_slider;
 
     //Wave total
     const int wave_tot = 4;
+    int all_enemy_cnt;
     const float enemy_height = 1.7f;
-    const float enemy_up_power = 500.0f;
+    const float enemy_up_power = 600.0f;
 
     //now wave
     int now_wave = 1;
     //field enemies cnt
     int now_enemies = 0;    
     int front_enemy = 0;    //가장 선두에 있는 적 객체 인덱스
+    int solve_enemy = 0;    //해치운 적의 수
+    int now_score = 0;
 
 
     //enemies object pooling
-    Enemy[] enemies = new Enemy[wave_tot*5 + 5]; //wave당 적 객체 수: 10, 15, 20, 25...최대 8*5+5
+    Enemy[] enemies = new Enemy[wave_tot * 5 + 5]; //wave당 적 객체 수: 10, 15, 20, 25...최대 8*5+5
 
 
     void Start()
     {
+        for(int i=1; i<=wave_tot; i++)
+        {
+            all_enemy_cnt += (i * 5) + 5;
+        }
         GameObject[] enemies_prefab = Resources.LoadAll<GameObject>("Prefabs/Enemies/");
         int enemyP_len = enemies_prefab.Length;
         
@@ -62,15 +73,18 @@ public class GameManager : MonoBehaviour
             //비활성화
             enemies[i].enemy.SetActive(false);
         }
-        Wave(now_wave);
 
         //ui 초기화
+        wave_slider.maxValue = all_enemy_cnt;
+        Wave(now_wave);
         PlayerHPUI(PlayerMove.hp);
         EnemyHPUI();
     }
 
     void Wave(int wave_num)
     {
+        WaveUI();
+
         enemy_folder.transform.position = new Vector2(0, 10);
 
         //해당 wave에서 등장할 적 객체 수
@@ -104,16 +118,20 @@ public class GameManager : MonoBehaviour
     {
         enemies[front_enemy].hp -= atk;
         if(enemies[front_enemy].hp <= 0) {
+            //score 증가: 쓰러트린 적의 최대 체력만큼 점수 획득
+            ScoreUI(enemies[front_enemy].max_hp);
             //init pool
             enemies[front_enemy].enemy.SetActive(false);
             enemies[front_enemy].hp = enemies[front_enemy].max_hp;
 
             now_enemies--;
+            solve_enemy++;
             if (now_enemies > 0)
             {
                 front_enemy++;
             }
         }
+        WaveUI();
         ChkEnemyCnt();
         EnemyHPUI();
     }
@@ -173,5 +191,17 @@ public class GameManager : MonoBehaviour
 
         string hp_txt = enemy_hp_slider.value + " / " + enemy_hp_slider.maxValue;
         enemy_hp_txt.text = hp_txt;
+    }
+
+    void ScoreUI(int get_score)
+    {
+        now_score += get_score;
+        score_txt.text = now_score.ToString();
+    }
+
+    void WaveUI()
+    {
+        wave_txt.text = now_wave.ToString();
+        wave_slider.value = solve_enemy;
     }
 }
